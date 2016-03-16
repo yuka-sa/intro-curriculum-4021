@@ -188,7 +188,7 @@ router.post('/:scheduleId', authenticationEnsurer, (req, res, next) => {
       }
     });
   } else if (parseInt(req.query.delete) === 1) {
-    deleteScheduleAggrigate(req.params.scheduleId, () => {
+    deleteScheduleAggregate(req.params.scheduleId, () => {
       res.redirect('/');
     });
   } else {
@@ -198,7 +198,7 @@ router.post('/:scheduleId', authenticationEnsurer, (req, res, next) => {
   }
 });
 
-function deleteScheduleAggrigate(scheduleId, done) {
+function deleteScheduleAggregate(scheduleId, done) {
   let promiseCommentDestroy = Comment.findAll({
     where: { scheduleId: scheduleId }
   }).then((comments) => {
@@ -223,7 +223,7 @@ function deleteScheduleAggrigate(scheduleId, done) {
   }).then(() => { done(); });
 }
 
-router.deleteScheduleAggrigate = deleteScheduleAggrigate;
+router.deleteScheduleAggregate = deleteScheduleAggregate;
 
 function createCandidatesAndRedirect(candidateNames, scheduleId, res) {
     let candidates = candidateNames.map((c) => { return {
