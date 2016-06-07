@@ -1,14 +1,14 @@
 'use strict';
-let $ = require('jquery');
+const $ = require('jquery');
 
 $('.availability-toggle-button').each((i, e) => {
-  let button = $(e);
+  const button = $(e);
   button.click(() => {
-    let scheduleId = button.data('schedule-id');
-    let userId = button.data('user-id');
-    let candidateId = button.data('candidate-id');
-    let availability = parseInt(button.data('availability'));
-    let nextAvailability = (availability + 1) % 3;
+    const scheduleId = button.data('schedule-id');
+    const userId = button.data('user-id');
+    const candidateId = button.data('candidate-id');
+    const availability = parseInt(button.data('availability'));
+    const nextAvailability = (availability + 1) % 3;
     $.post(`/schedules/${scheduleId}/users/${userId}/candidates/${candidateId}`,
       { availability: nextAvailability },
       (data) => {
@@ -19,11 +19,11 @@ $('.availability-toggle-button').each((i, e) => {
   });
 });
 
-let buttonSelfComment = $('#self-comment-button');
+const buttonSelfComment = $('#self-comment-button');
 buttonSelfComment.click(() => {
-  let scheduleId = buttonSelfComment.data('schedule-id');
-  let userId = buttonSelfComment.data('user-id');
-  let comment = prompt('コメントを255文字以内で入力してください。');
+  const scheduleId = buttonSelfComment.data('schedule-id');
+  const userId = buttonSelfComment.data('user-id');
+  const comment = prompt('コメントを255文字以内で入力してください。');
   if (comment) {
     $.post(`/schedules/${scheduleId}/users/${userId}/comments`,
       { comment: comment },
