@@ -195,7 +195,7 @@ router.post('/:scheduleId', authenticationEnsurer, (req, res, next) => {
   }
 });
 
-function deleteScheduleAggregate(scheduleId, done) {
+function deleteScheduleAggregate(scheduleId, done, err) {
   const promiseCommentDestroy = Comment.findAll({
     where: { scheduleId: scheduleId }
   }).then((comments) => {
@@ -217,7 +217,10 @@ function deleteScheduleAggregate(scheduleId, done) {
     return Promise.all(promises);
   }).then(() => {
     return Schedule.findById(scheduleId).then((s) => { return s.destroy(); });
-  }).then(() => { done(); });
+  }).then(() => {
+    if (err) return done(err);
+    done();
+  });
 }
 
 router.deleteScheduleAggregate = deleteScheduleAggregate;
