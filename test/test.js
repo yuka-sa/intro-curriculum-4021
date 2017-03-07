@@ -75,7 +75,7 @@ describe('/schedules', () => {
             .expect(/テスト候補2/)
             .expect(/テスト候補3/)
             .expect(200)
-            .end(() => { deleteScheduleAggregate(createdSchedulePath.split('/schedules/')[1], done);});
+            .end((err, res) => { deleteScheduleAggregate(createdSchedulePath.split('/schedules/')[1], done, err);});
         });
     });
   });
@@ -107,14 +107,14 @@ describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
             request(app)
               .post(`/schedules/${scheduleId}/users/${0}/candidates/${candidate.candidateId}`)
               .send({ availability: 2 }) // 出席に更新
-              .expect('availability:2')
-              .end(() => {
+              .expect('{"status":"OK","availability":2}')
+              .end((err, res) => {
                 Availability.findAll({
                   where: { scheduleId: scheduleId }
                 }).then((availabilities) => {
                   assert.equal(availabilities.length, 1);
                   assert.equal(availabilities[0].availability, 2);
-                  deleteScheduleAggregate(scheduleId, done);
+                  deleteScheduleAggregate(scheduleId, done, err);
                 });
               });
           });
@@ -146,14 +146,14 @@ describe('/schedules/:scheduleId/users/:userId/comments', () => {
           request(app)
             .post(`/schedules/${scheduleId}/users/${0}/comments`)
             .send({ comment: 'testcomment' })
-            .expect('comment:"testcomment"')
-            .end(() => {
+            .expect('{"status":"OK","comment":"testcomment"}')
+            .end((err, res) => {
               Comment.findAll({
                 where: { scheduleId: scheduleId }
               }).then((comments) => {
                 assert.equal(comments.length, 1);
                 assert.equal(comments[0].comment, 'testcomment');
-                deleteScheduleAggregate(scheduleId, done);
+                deleteScheduleAggregate(scheduleId, done, err);
               });
             });
         });
@@ -184,7 +184,7 @@ describe('/schedules/:scheduleId?edit=1', () => {
           request(app)
             .post(`/schedules/${scheduleId}?edit=1`)
             .send({ scheduleName: 'テスト更新予定2', memo: 'テスト更新メモ2', candidates: 'テスト更新候補2' })
-            .end(() => {
+            .end((err, res) => {
               Schedule.findById(scheduleId).then((s) => {
                 assert.equal(s.scheduleName, 'テスト更新予定2');
                 assert.equal(s.memo, 'テスト更新メモ2');
@@ -195,7 +195,7 @@ describe('/schedules/:scheduleId?edit=1', () => {
                 assert.equal(candidates.length, 2);
                 assert.equal(candidates[0].candidateName, 'テスト更新候補1');
                 assert.equal(candidates[1].candidateName, 'テスト更新候補2');
-                deleteScheduleAggregate(scheduleId, done);
+                deleteScheduleAggregate(scheduleId, done, err);
               });
             });
         });
@@ -274,6 +274,7 @@ describe('/schedules/:scheduleId?delete=1', () => {
               // TODO テストを実装
             });
             Promise.all([p1, p2, p3, p4]).then(() => {
+              if (err) return done(err);
               done();
             });
           });
