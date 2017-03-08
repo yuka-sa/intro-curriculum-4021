@@ -240,8 +240,11 @@ describe('/schedules/:scheduleId?delete=1', () => {
             request(app)
               .post(`/schedules/${scheduleId}/users/${0}/comments`)
               .send({ comment: 'testcomment' })
-              .expect('comment:"testcomment"')
-              .end(() => { resolve(); });
+              .expect('{"status":"OK","comment":"testcomment"}')
+              .end((err, res) => {
+                if (err) done(err);
+                resolve();
+              });
           });
 
           // 削除
@@ -249,8 +252,10 @@ describe('/schedules/:scheduleId?delete=1', () => {
             return new Promise((resolve) => {
               request(app)
                 .post(`/schedules/${scheduleId}?delete=1`)
-                .end(() => { resolve(); });
-            });
+                .end((err, res) => {
+                  if (err) done(err);
+                  resolve();
+              });
           });
 
           // テスト
