@@ -37,7 +37,7 @@ block content
             p#self-comment #{commentMap.get(user.userId)}
             button(
               data-schedule-id=schedule.scheduleId
-              data-user-id=user.userId) 編集
+              data-user-id=user.userId)#self-comment-button 編集
         else
           td
             p #{commentMap.get(user.userId)}
