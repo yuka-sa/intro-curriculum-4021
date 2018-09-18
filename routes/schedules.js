@@ -9,6 +9,7 @@ const User = require('../models/user');
 const Availability = require('../models/availability');
 const Comment = require('../models/comment');
 
+
 router.get('/new', authenticationEnsurer, (req, res, next) => {
   res.render('new', { user: req.user });
 });
@@ -155,7 +156,7 @@ router.post('/:scheduleId', authenticationEnsurer, (req, res, next) => {
       scheduleId: req.params.scheduleId
     }
   }).then((schedule) => {
-    if (isMine(req, schedule)) { // 作成者のみ
+    if (schedule && isMine(req, schedule)) {
       if (parseInt(req.query.edit) === 1) {
         const updatedAt = new Date();
         schedule.update({
@@ -238,7 +239,7 @@ function createCandidatesAndRedirect(candidateNames, scheduleId, res) {
 }
 
 function parseCandidateNames(req) {
-  return req.body.candidates.trim().split('\n').map((s) => s.trim());
+  return req.body.candidates.trim().split('\n').map((s) => s.trim()).filter((s) => s !== "");
 }
 
 module.exports = router;
