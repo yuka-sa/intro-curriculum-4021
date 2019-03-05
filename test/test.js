@@ -280,7 +280,7 @@ describe('/schedules/:scheduleId?delete=1', () => {
             }).then((candidates) => {
               // TODO テストを実装
             });
-            const p4 = Schedule.findById(scheduleId).then((schedule) => {
+            const p4 = Schedule.findByPk(scheduleId).then((schedule) => {
               // TODO テストを実装
             });
             Promise.all([p1, p2, p3, p4]).then(() => {
