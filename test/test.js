@@ -20,7 +20,7 @@ describe('/login', () => {
     passportStub.logout();
     passportStub.uninstall(app);
   });
-  
+
   test('ログインのためのリンクが含まれる', () => {
     return request(app)
       .get('/login')
@@ -28,7 +28,7 @@ describe('/login', () => {
       .expect(/<a href="\/auth\/github"/)
       .expect(200);
   });
-  
+
   test('ログイン時はユーザー名が表示される', () => {
     return request(app)
       .get('/login')
@@ -79,7 +79,7 @@ describe('/schedules', () => {
             .expect(/テスト候補2/)
             .expect(/テスト候補3/)
             .expect(200)
-            .end((err, res) => { deleteScheduleAggregate(createdSchedulePath.split('/schedules/')[1], done, err);});
+            .end((err, res) => { deleteScheduleAggregate(createdSchedulePath.split('/schedules/')[1], done, err); });
         });
     });
   });
@@ -95,7 +95,7 @@ describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
     passportStub.logout();
     passportStub.uninstall(app);
   });
-  
+
   test('出欠が更新できる', (done) => {
     User.upsert({ userId: 0, username: 'testuser' }).then(() => {
       request(app)
