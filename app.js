@@ -18,7 +18,7 @@ User.sync().then(async () => {
   Comment.belongsTo(User, {foreignKey: 'userId'});
   Comment.sync();
   Availability.belongsTo(User, {foreignKey: 'userId'});
-  await Candidate.sync()
+  await Candidate.sync();
   Availability.belongsTo(Candidate, {foreignKey: 'candidateId'});
   Availability.sync();
 });
@@ -47,7 +47,7 @@ passport.use(new GitHubStrategy({
       await User.upsert({
         userId: profile.id,
         username: profile.username
-      })
+      });
       done(null, profile);
     });
   }
