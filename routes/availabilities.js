@@ -4,7 +4,10 @@ const router = express.Router();
 const authenticationEnsurer = require('./authentication-ensurer');
 const Availability = require('../models/availability');
 
-router.post('/:scheduleId/users/:userId/candidates/:candidateId', authenticationEnsurer, async (req, res, next) => {
+router.post(
+  '/:scheduleId/users/:userId/candidates/:candidateId',
+  authenticationEnsurer,
+  async (req, res, next) => {
     const scheduleId = req.params.scheduleId;
     const userId = req.params.userId;
     const candidateId = req.params.candidateId;
