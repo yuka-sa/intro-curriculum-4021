@@ -18,10 +18,9 @@ function mockIronSession() {
 
 // テストで作成したデータを削除
 async function deleteScheduleAggregate(scheduleId) {
-  await prisma.availability.deleteMany({ where: { scheduleId } });
-  await prisma.candidate.deleteMany({ where: { scheduleId } });
-  await prisma.comment.deleteMany({ where: { scheduleId } });
-  await prisma.schedule.delete({ where: { scheduleId } });
+  // iron-session のモックを使うため、ここで読み込む
+  const { deleteScheduleAggregate } = require("./routes/schedules");
+  await deleteScheduleAggregate(scheduleId);
 }
 
 describe("/login", () => {
@@ -66,7 +65,7 @@ describe("/schedules", () => {
 
   afterAll(async () => {
     jest.restoreAllMocks();
-    deleteScheduleAggregate(scheduleId);
+    await deleteScheduleAggregate(scheduleId);
   });
 
   test("予定が作成でき、表示される", async () => {

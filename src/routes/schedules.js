@@ -268,6 +268,10 @@ app.get('/:scheduleId/edit', async (c) => {
           </div>
           <button type="submit">以上の内容で予定を編集する</button>
         </form>
+        <h3>危険な変更</h3>
+        <form method="post" action="/schedules/${schedule.scheduleId}/delete">
+          <button type="submit">この予定を削除する</button>
+        </form>
       `,
     ),
   );
@@ -300,6 +304,31 @@ app.post("/:scheduleId/update", async (c) => {
   }
 
   return c.redirect("/schedules/" + updatedSchedule.scheduleId);
+});
+
+async function deleteScheduleAggregate(scheduleId) {
+  await prisma.availability.deleteMany({ where: { scheduleId } });
+  await prisma.candidate.deleteMany({ where: { scheduleId } });
+  await prisma.comment.deleteMany({ where: { scheduleId } });
+  await prisma.schedule.delete({ where: { scheduleId } });
+}
+app.deleteScheduleAggregate = deleteScheduleAggregate;
+
+app.use("/:scheduleId/delete", ensureAuthenticated());
+app.post("/:scheduleId/delete", async (c) => {
+  const { user } = c.get("session");
+  const schedule = await prisma.schedule.findUnique({
+    where: { scheduleId: c.req.param("scheduleId") },
+  });
+  if (!isMine(user.id, schedule)) {
+    await deleteScheduleAggregate(schedule.scheduleId);
+    return c.notFound();
+  }
+
+  await prisma.schedule.delete({
+    where: { scheduleId: schedule.scheduleId },
+  });
+  return c.redirect("/");
 });
 
 module.exports = app;
