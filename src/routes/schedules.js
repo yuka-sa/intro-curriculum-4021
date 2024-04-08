@@ -14,14 +14,16 @@ async function createCandidates(candidateNames, scheduleId) {
     scheduleId,
   }));
   await prisma.candidate.createMany({
-    data: candidates
+    data: candidates,
   });
 }
 
 function parseCandidateNames(candidatesStr) {
-  return candidatesStr.split('\n').map((s) => s.trim()).filter((s) => s !== '');
+  return candidatesStr
+    .split("\n")
+    .map((s) => s.trim())
+    .filter((s) => s !== "");
 }
-
 
 app.use("/new", ensureAuthenticated());
 app.get("/new", (c) => {
@@ -161,7 +163,9 @@ app.get("/:scheduleId", async (c) => {
         <p style="white-space: pre;">${schedule.memo}</p>
         <p>作成者: ${schedule.user.username}</p>
         ${isMine(user.id, schedule)
-          ? html`<a href="/schedules/${schedule.scheduleId}/edit">この予定を編集する</a>`
+          ? html`<a href="/schedules/${schedule.scheduleId}/edit"
+              >この予定を編集する</a
+            >`
           : ""}
         <h3>出欠表</h3>
         <table>
@@ -231,7 +235,7 @@ function isMine(userId, schedule) {
 }
 
 app.use("/:scheduleId/edit", ensureAuthenticated());
-app.get('/:scheduleId/edit', async (c) => {
+app.get("/:scheduleId/edit", async (c) => {
   const { user } = c.get("session");
   const schedule = await prisma.schedule.findUnique({
     where: { scheduleId: c.req.param("scheduleId") },
@@ -242,7 +246,7 @@ app.get('/:scheduleId/edit', async (c) => {
 
   const candidates = await prisma.candidate.findMany({
     where: { scheduleId: schedule.scheduleId },
-    orderBy: { candidateId: 'asc' }
+    orderBy: { candidateId: "asc" },
   });
 
   return c.html(
@@ -252,7 +256,11 @@ app.get('/:scheduleId/edit', async (c) => {
         <form method="post" action="/schedules/${schedule.scheduleId}/update">
           <div>
             <h5>予定名</h5>
-            <input type="text" name="scheduleName" value="${schedule.scheduleName}" />
+            <input
+              type="text"
+              name="scheduleName"
+              value="${schedule.scheduleName}"
+            />
           </div>
           <div>
             <h5>メモ</h5>
@@ -261,7 +269,9 @@ app.get('/:scheduleId/edit', async (c) => {
           <div>
             <h5>既存の候補日程</h5>
             <ul>
-              ${candidates.map((candidate) => html`<li>${candidate.candidateName}</li>`)}
+              ${candidates.map(
+                (candidate) => html`<li>${candidate.candidateName}</li>`,
+              )}
             </ul>
             <p>候補日程の追加 (改行して複数入力してください)</p>
             <textarea name="candidates"></textarea>

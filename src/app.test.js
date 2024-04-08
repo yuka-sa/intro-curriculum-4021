@@ -263,7 +263,9 @@ describe("/schedules/:scheduleId/update", () => {
       }),
     });
 
-    const schedule = await prisma.schedule.findUnique({ where: { scheduleId } });
+    const schedule = await prisma.schedule.findUnique({
+      where: { scheduleId },
+    });
     expect(schedule.scheduleName).toBe("テスト更新予定2");
     expect(schedule.memo).toBe("テスト更新メモ2");
 
