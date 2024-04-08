@@ -219,3 +219,61 @@ describe("/schedules/:scheduleId/users/:userId/comments", () => {
     expect(comments[0].comment).toBe("testcomment");
   });
 });
+
+describe("/schedules/:scheduleId/update", () => {
+  let scheduleId = "";
+  beforeAll(() => {
+    mockIronSession();
+  });
+
+  afterAll(async () => {
+    jest.restoreAllMocks();
+    await deleteScheduleAggregate(scheduleId);
+  });
+
+  test("予定が更新でき、候補が追加できる", async () => {
+    await prisma.user.upsert({
+      where: { userId: testUser.userId },
+      create: testUser,
+      update: testUser,
+    });
+
+    const app = require("./app");
+
+    const postRes = await app.request("/schedules", {
+      method: "POST",
+      body: new URLSearchParams({
+        scheduleName: "テスト更新予定1",
+        memo: "テスト更新メモ1",
+        candidates: "テスト更新候補1",
+      }),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
+
+    const createdSchedulePath = postRes.headers.get("Location");
+    scheduleId = createdSchedulePath.split("/schedules/")[1];
+
+    const res = await app.request(`/schedules/${scheduleId}/update`, {
+      method: "POST",
+      body: JSON.stringify({
+        scheduleName: "テスト更新予定2",
+        memo: "テスト更新メモ2",
+        candidates: "テスト更新候補2",
+      }),
+    });
+
+    const schedule = await prisma.schedule.findUnique({ where: { scheduleId } });
+    expect(schedule.scheduleName).toBe("テスト更新予定2");
+    expect(schedule.memo).toBe("テスト更新メモ2");
+
+    const candidates = await prisma.candidate.findMany({
+      where: { scheduleId },
+      orderBy: { candidateId: "asc" },
+    });
+    expect(candidates.length).toBe(2);
+    expect(candidates[0].candidateName).toBe("テスト更新候補1");
+    expect(candidates[1].candidateName).toBe("テスト更新候補2");
+  });
+});

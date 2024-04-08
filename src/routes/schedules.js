@@ -8,6 +8,21 @@ const prisma = new PrismaClient({ log: ["query"] });
 
 const app = new Hono();
 
+async function createCandidates(candidateNames, scheduleId) {
+  const candidates = candidateNames.map((candidateName) => ({
+    candidateName,
+    scheduleId,
+  }));
+  await prisma.candidate.createMany({
+    data: candidates
+  });
+}
+
+function parseCandidateNames(candidatesStr) {
+  return candidatesStr.split('\n').map((s) => s.trim()).filter((s) => s !== '');
+}
+
+
 app.use("/new", ensureAuthenticated());
 app.get("/new", (c) => {
   return c.html(
@@ -51,17 +66,8 @@ app.post("/", async (c) => {
   });
 
   // 候補日程を登録
-  const candidateNames = body.candidates
-    .split("\n")
-    .map((s) => s.trim())
-    .filter((s) => s !== "");
-  const candidates = candidateNames.map((candidateName) => ({
-    candidateName,
-    scheduleId: schedule.scheduleId,
-  }));
-  await prisma.candidate.createMany({
-    data: candidates,
-  });
+  const candidateNames = parseCandidateNames(body.candidates);
+  await createCandidates(candidateNames, schedule.scheduleId);
 
   // 作成した予定のページにリダイレクト
   return c.redirect("/schedules/" + schedule.scheduleId);
@@ -154,6 +160,9 @@ app.get("/:scheduleId", async (c) => {
         <h4>${schedule.scheduleName}</h4>
         <p style="white-space: pre;">${schedule.memo}</p>
         <p>作成者: ${schedule.user.username}</p>
+        ${isMine(user.id, schedule)
+          ? html`<a href="/schedules/${schedule.scheduleId}/edit">この予定を編集する</a>`
+          : ""}
         <h3>出欠表</h3>
         <table>
           <tr>
@@ -215,6 +224,82 @@ app.get("/:scheduleId", async (c) => {
       `,
     ),
   );
+});
+
+function isMine(userId, schedule) {
+  return schedule && parseInt(schedule.createdBy, 10) === parseInt(userId, 10);
+}
+
+app.use("/:scheduleId/edit", ensureAuthenticated());
+app.get('/:scheduleId/edit', async (c) => {
+  const { user } = c.get("session");
+  const schedule = await prisma.schedule.findUnique({
+    where: { scheduleId: c.req.param("scheduleId") },
+  });
+  if (!isMine(user.id, schedule)) {
+    return c.notFound();
+  }
+
+  const candidates = await prisma.candidate.findMany({
+    where: { scheduleId: schedule.scheduleId },
+    orderBy: { candidateId: 'asc' }
+  });
+
+  return c.html(
+    layout(
+      `予定の編集: ${schedule.scheduleName}`,
+      html`
+        <form method="post" action="/schedules/${schedule.scheduleId}/update">
+          <div>
+            <h5>予定名</h5>
+            <input type="text" name="scheduleName" value="${schedule.scheduleName}" />
+          </div>
+          <div>
+            <h5>メモ</h5>
+            <textarea name="memo">${schedule.memo}</textarea>
+          </div>
+          <div>
+            <h5>既存の候補日程</h5>
+            <ul>
+              ${candidates.map((candidate) => html`<li>${candidate.candidateName}</li>`)}
+            </ul>
+            <p>候補日程の追加 (改行して複数入力してください)</p>
+            <textarea name="candidates"></textarea>
+          </div>
+          <button type="submit">以上の内容で予定を編集する</button>
+        </form>
+      `,
+    ),
+  );
+});
+
+app.use("/:scheduleId/update", ensureAuthenticated());
+app.post("/:scheduleId/update", async (c) => {
+  const { user } = c.get("session");
+  const schedule = await prisma.schedule.findUnique({
+    where: { scheduleId: c.req.param("scheduleId") },
+  });
+  if (!isMine(user.id, schedule)) {
+    return c.notFound();
+  }
+
+  const body = await c.req.json();
+  const updatedSchedule = await prisma.schedule.update({
+    where: { scheduleId: schedule.scheduleId },
+    data: {
+      scheduleName: body.scheduleName.slice(0, 255) || "（名称未設定）",
+      memo: body.memo,
+      updatedAt: new Date(),
+    },
+  });
+
+  // 候補が追加されているかチェック
+  const candidateNames = parseCandidateNames(body.candidates);
+  if (candidateNames.length) {
+    await createCandidates(candidateNames, updatedSchedule.scheduleId);
+  }
+
+  return c.redirect("/schedules/" + updatedSchedule.scheduleId);
 });
 
 module.exports = app;
