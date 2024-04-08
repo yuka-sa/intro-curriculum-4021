@@ -278,3 +278,88 @@ describe("/schedules/:scheduleId/update", () => {
     expect(candidates[1].candidateName).toBe("テスト更新候補2");
   });
 });
+
+describe("/schedules/:scheduleId/delete", () => {
+  beforeAll(() => {
+    mockIronSession();
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
+  });
+
+  test("予定に関連する全ての情報が削除できる", async () => {
+    await prisma.user.upsert({
+      where: { userId: testUser.userId },
+      create: testUser,
+      update: testUser,
+    });
+
+    const app = require("./app");
+
+    const postRes = await app.request("/schedules", {
+      method: "POST",
+      body: new URLSearchParams({
+        scheduleName: "テスト削除予定1",
+        memo: "テスト削除メモ1",
+        candidates: "テスト削除候補1",
+      }),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
+
+    const createdSchedulePath = postRes.headers.get("Location");
+    const scheduleId = createdSchedulePath.split("/schedules/")[1];
+
+    // 出欠作成
+    const candidate = await prisma.candidate.findFirst({
+      where: { scheduleId },
+    });
+    await app.request(
+      `/schedules/${scheduleId}/users/${testUser.userId}/candidates/${candidate.candidateId}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          availability: 2,
+        }),
+      },
+    );
+
+    // コメント作成
+    await app.request(
+      `/schedules/${scheduleId}/users/${testUser.userId}/comments`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          comment: "testcomment",
+        }),
+      },
+    );
+
+    // 削除
+    const res = await app.request(`/schedules/${scheduleId}/delete`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(302);
+
+    // テスト
+    const availabilities = await prisma.availability.findMany({
+      where: { scheduleId },
+    });
+    // TODO テストを実装
+
+    const candidates = await prisma.candidate.findMany({
+      where: { scheduleId },
+    });
+    // TODO テストを実装
+
+    const comments = await prisma.comment.findMany({ where: { scheduleId } });
+    // TODO テストを実装
+
+    const schedule = await prisma.schedule.findUnique({
+      where: { scheduleId },
+    });
+    // TODO テストを実装
+  });
+});

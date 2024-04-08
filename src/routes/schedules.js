@@ -331,13 +331,10 @@ app.post("/:scheduleId/delete", async (c) => {
     where: { scheduleId: c.req.param("scheduleId") },
   });
   if (!isMine(user.id, schedule)) {
-    await deleteScheduleAggregate(schedule.scheduleId);
     return c.notFound();
   }
 
-  await prisma.schedule.delete({
-    where: { scheduleId: schedule.scheduleId },
-  });
+  await deleteScheduleAggregate(schedule.scheduleId);
   return c.redirect("/");
 });
 
