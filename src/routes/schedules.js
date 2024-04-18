@@ -24,11 +24,10 @@ function parseCandidateNames(candidatesStr) {
     .map((s) => s.trim())
     .filter((s) => s !== "");
 }
-
-app.use("/new", ensureAuthenticated());
-app.get("/new", (c) => {
+app.get("/new", ensureAuthenticated(), (c) => {
   return c.html(
     layout(
+      c,
       "予定の作成",
       html`
         <form method="post" action="/schedules">
@@ -51,9 +50,8 @@ app.get("/new", (c) => {
   );
 });
 
-app.use("/", ensureAuthenticated());
-app.post("/", async (c) => {
-  const { user } = c.get("session");
+app.post("/", ensureAuthenticated(), async (c) => {
+  const { user } = c.get("session") ?? {};
   const body = await c.req.parseBody();
 
   // 予定を登録
@@ -75,9 +73,8 @@ app.post("/", async (c) => {
   return c.redirect("/schedules/" + schedule.scheduleId);
 });
 
-app.use("/:scheduleId", ensureAuthenticated());
-app.get("/:scheduleId", async (c) => {
-  const { user } = c.get("session");
+app.get("/:scheduleId", ensureAuthenticated(), async (c) => {
+  const { user } = c.get("session") ?? {};
   const schedule = await prisma.schedule.findUnique({
     where: { scheduleId: c.req.param("scheduleId") },
     include: {
@@ -157,6 +154,7 @@ app.get("/:scheduleId", async (c) => {
 
   return c.html(
     layout(
+      c,
       `予定: ${schedule.scheduleName}`,
       html`
         <h4>${schedule.scheduleName}</h4>
@@ -234,9 +232,8 @@ function isMine(userId, schedule) {
   return schedule && parseInt(schedule.createdBy, 10) === parseInt(userId, 10);
 }
 
-app.use("/:scheduleId/edit", ensureAuthenticated());
-app.get("/:scheduleId/edit", async (c) => {
-  const { user } = c.get("session");
+app.get("/:scheduleId/edit", ensureAuthenticated(), async (c) => {
+  const { user } = c.get("session") ?? {};
   const schedule = await prisma.schedule.findUnique({
     where: { scheduleId: c.req.param("scheduleId") },
   });
@@ -251,6 +248,7 @@ app.get("/:scheduleId/edit", async (c) => {
 
   return c.html(
     layout(
+      c,
       `予定の編集: ${schedule.scheduleName}`,
       html`
         <form method="post" action="/schedules/${schedule.scheduleId}/update">
@@ -287,9 +285,8 @@ app.get("/:scheduleId/edit", async (c) => {
   );
 });
 
-app.use("/:scheduleId/update", ensureAuthenticated());
-app.post("/:scheduleId/update", async (c) => {
-  const { user } = c.get("session");
+app.post("/:scheduleId/update", ensureAuthenticated(), async (c) => {
+  const { user } = c.get("session") ?? {};
   const schedule = await prisma.schedule.findUnique({
     where: { scheduleId: c.req.param("scheduleId") },
   });
@@ -324,9 +321,8 @@ async function deleteScheduleAggregate(scheduleId) {
 }
 app.deleteScheduleAggregate = deleteScheduleAggregate;
 
-app.use("/:scheduleId/delete", ensureAuthenticated());
-app.post("/:scheduleId/delete", async (c) => {
-  const { user } = c.get("session");
+app.post("/:scheduleId/delete", ensureAuthenticated(), async (c) => {
+  const { user } = c.get("session") ?? {};
   const schedule = await prisma.schedule.findUnique({
     where: { scheduleId: c.req.param("scheduleId") },
   });
