@@ -252,12 +252,12 @@ describe('/schedules/:scheduleId/delete', () => {
 
     // テスト
     const availabilities = await prisma.availability.findMany({ where: { scheduleId } });
-    // TODO テストを実装;
+    expect(availabilities.length).toBe(0);
     const candidates = await prisma.candidate.findMany({ where: { scheduleId } });
-    // TODO テストを実装
+    expect(candidates.length).toBe(0);
     const comments = await prisma.comment.findMany({ where: { scheduleId } });
-    // TODO テストを実装
+    expect(comments.length).toBe(0);
     const schedule = await prisma.schedule.findUnique({ where: { scheduleId } });
-    // TODO テストを実装
+    expect(!schedule).toBe(true);
   });
 });
